@@ -1,0 +1,12 @@
+node_modules
+dist
+out-tsc
+.angular
+coverage
+.git
+.gitignore
+README.md
+.idea
+.vscode
+.env
+.env.*

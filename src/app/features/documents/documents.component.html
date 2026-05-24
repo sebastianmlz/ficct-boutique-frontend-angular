@@ -1,0 +1,139 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2>Gestión de documentos</h2>
+      <p class="text-sm text-boutique-mute">Archivos almacenados de forma privada y verificados por SHA-256.</p>
+    </div>
+    <button class="btn-secondary" (click)="load()" [disabled]="loading()">Refrescar</button>
+  </div>
+
+  <div *ngIf="auth.hasRole('admin', 'staff')" class="card">
+    <h3 class="mb-4">Nuevo documento</h3>
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <label class="label" for="docTitle">Título</label>
+        <input id="docTitle" class="input" [(ngModel)]="title" name="title" placeholder="Factura abril 2026" />
+      </div>
+      <div>
+        <label class="label" for="docCategory">Categoría</label>
+        <select id="docCategory" class="input" [(ngModel)]="category" name="category">
+          <option value="word">Contrato (Word)</option>
+          <option value="excel">Reporte (Excel)</option>
+          <option value="pdf">Factura (PDF)</option>
+          <option value="image">Imagen catálogo</option>
+          <option value="other">Otro</option>
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label class="label" for="docDesc">Descripción</label>
+        <textarea id="docDesc" class="input" appAutosize [(ngModel)]="description" name="description" placeholder="Notas opcionales sobre el documento"></textarea>
+      </div>
+      <div class="md:col-span-2">
+        <app-file-drop
+          label="Archivo"
+          [accept]="acceptFor(category)"
+          [hint]="categoryLabel(category) + ' · máx 50 MB'"
+          (fileChosen)="onFileChosen($event)"
+          (fileCleared)="onFileCleared()"
+        ></app-file-drop>
+      </div>
+      <div class="md:col-span-2 flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-boutique-mute">{{ uploadMsg }}</p>
+        <button class="btn-primary" (click)="upload()" [disabled]="uploading">
+          {{ uploading ? 'Subiendo…' : 'Subir documento' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
+  <div *ngIf="error()" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+
+  <div *ngIf="!loading() && documents().length === 0" class="card text-center text-sm text-boutique-mute">
+    Sin documentos.
+  </div>
+
+  <div *ngIf="documents().length > 0" class="card overflow-x-auto p-0">
+    <table class="table-base">
+      <thead>
+        <tr>
+          <th class="w-2/5">Documento</th>
+          <th>Categoría</th>
+          <th class="text-right">Tamaño</th>
+          <th>Integridad</th>
+          <th>Estado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <tr *ngFor="let d of documents()">
+          <td>
+            <div class="font-medium text-boutique-ink">{{ d.title }}</div>
+            <div *ngIf="d.description" class="mt-1 line-clamp-2 text-xs text-boutique-mute">{{ d.description }}</div>
+          </td>
+          <td class="capitalize text-sm">{{ categoryLabel(d.category) }}</td>
+          <td class="text-right tabular-nums">{{ formatBytes(d.size_bytes) }}</td>
+          <td>
+            <span *ngIf="d.sha256" class="inline-flex items-center gap-1 font-mono text-xs text-boutique-mute" [title]="d.sha256">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5 text-emerald-700">
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+              {{ d.sha256 | shortId:10:6 }}
+            </span>
+            <span *ngIf="!d.sha256" class="text-xs text-boutique-mute">—</span>
+          </td>
+          <td>
+            <span [ngClass]="{
+              'badge-active': d.status === 'active',
+              'badge-pending': d.status === 'pending',
+              'badge-deleted': d.status === 'deleted'
+            }">
+              {{ d.status === 'active' ? 'Activo' : d.status === 'pending' ? 'Pendiente' : 'Eliminado' }}
+            </span>
+          </td>
+          <td>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <button class="btn-secondary" (click)="download(d)" [disabled]="d.status !== 'active'">Descargar</button>
+              <button *ngIf="auth.hasRole('admin', 'staff')" class="btn-secondary" (click)="verify(d)" [disabled]="d.status !== 'active'">Verificar</button>
+              <button *ngIf="auth.hasRole('admin')" class="btn-danger" (click)="remove(d)" [disabled]="d.status === 'deleted'">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="verifyingId && verifyResult" class="card border-2 border-boutique-ink">
+    <div class="flex items-start justify-between">
+      <h3>Resultado de verificación</h3>
+      <button class="btn-secondary" (click)="closeVerify()">Cerrar</button>
+    </div>
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex flex-wrap justify-between gap-2">
+        <dt class="text-boutique-mute">Hash almacenado:</dt>
+        <dd class="font-mono break-all">{{ verifyResult.storedSha }}</dd>
+      </div>
+      <div class="flex flex-wrap justify-between gap-2">
+        <dt class="text-boutique-mute">Hash actual:</dt>
+        <dd class="font-mono break-all">{{ verifyResult.currentSha }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-boutique-mute">Integridad del archivo:</dt>
+        <dd>
+          <span [class]="verifyResult.intact ? 'badge-active' : 'badge-deleted'">
+            {{ verifyResult.intact ? 'OK' : 'ALTERADO' }}
+          </span>
+        </dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-boutique-mute">Cadena de hashes:</dt>
+        <dd>
+          <span [class]="verifyResult.chainIntact ? 'badge-active' : 'badge-deleted'">
+            {{ verifyResult.chainIntact ? 'íntegra' : 'ROTA' }}
+          </span>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</div>

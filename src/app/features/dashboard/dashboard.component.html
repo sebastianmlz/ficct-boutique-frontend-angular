@@ -1,0 +1,80 @@
+<div class="space-y-6">
+  <h2>Resumen del día</h2>
+
+  <div *ngIf="loading()" class="card text-center text-sm text-boutique-mute">Cargando…</div>
+
+  <div *ngIf="error() && !loading()" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    {{ error() }}
+  </div>
+
+  <div *ngIf="summary() && !loading()" class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Ventas hoy</p>
+      <p class="mt-2 font-display text-2xl">{{ formatCurrency(summary()!.todaySales) }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Órdenes hoy</p>
+      <p class="mt-2 font-display text-2xl">{{ summary()!.todayOrders }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Pendientes</p>
+      <p class="mt-2 font-display text-2xl text-amber-700">{{ summary()!.pendingOrders }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Stock crítico</p>
+      <p class="mt-2 font-display text-2xl text-red-700">{{ summary()!.lowStockCount }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Productos activos</p>
+      <p class="mt-2 font-display text-2xl">{{ summary()!.activeProducts }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Sucursales</p>
+      <p class="mt-2 font-display text-2xl">{{ summary()!.activeBranches }}</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="card">
+      <div class="mb-4 flex items-center justify-between">
+        <h3>Ventas por mes</h3>
+        <span class="text-xs text-boutique-mute">Últimos 6 meses</span>
+      </div>
+      <div *ngIf="monthly().length === 0" class="flex h-56 items-center justify-center text-sm text-boutique-mute">
+        Aún no hay ventas confirmadas para graficar.
+      </div>
+      <div *ngIf="monthly().length > 0" class="relative h-56">
+        <canvas baseChart [data]="monthlyChartData()" [options]="monthlyChartOptions" type="bar"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="mb-4 flex items-center justify-between">
+        <h3>Prendas más vendidas</h3>
+        <span class="text-xs text-boutique-mute">Top 5</span>
+      </div>
+      <div *ngIf="popular().length === 0" class="flex h-56 items-center justify-center text-sm text-boutique-mute">
+        Sin ventas confirmadas todavía.
+      </div>
+      <div *ngIf="popular().length > 0" class="relative h-56">
+        <canvas baseChart [data]="popularChartData()" [options]="popularChartOptions" type="bar"></canvas>
+      </div>
+      <table *ngIf="popular().length > 0" class="table-base mt-4">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="text-right">Unidades</th>
+            <th class="text-right">Ingresos</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-boutique-line">
+          <tr *ngFor="let row of popular()">
+            <td class="font-medium">{{ row.productName }}</td>
+            <td class="text-right tabular-nums">{{ row.unitsSold }}</td>
+            <td class="text-right tabular-nums">{{ formatCurrency(row.revenue) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

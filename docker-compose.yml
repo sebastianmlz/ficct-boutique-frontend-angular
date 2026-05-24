@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ficct-boutique-frontend-angular:dev
+    container_name: ficct-admin-web
+    ports:
+      - "4200:80"
+    restart: unless-stopped

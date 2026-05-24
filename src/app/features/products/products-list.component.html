@@ -1,0 +1,95 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2>Catálogo de productos</h2>
+      <p class="text-sm text-boutique-mute">Administración completa: crear, editar, reemplazar imagen, desactivar/reactivar.</p>
+    </div>
+    <a *ngIf="auth.hasRole('admin')" routerLink="/products/new" class="btn-primary">Nuevo producto</a>
+  </div>
+
+  <div class="card">
+    <div class="grid gap-3 md:grid-cols-4">
+      <div>
+        <label class="label" for="search">Buscar</label>
+        <input id="search" type="text" class="input" [(ngModel)]="search" name="search" placeholder="SKU o nombre" />
+      </div>
+      <div>
+        <label class="label" for="category">Categoría</label>
+        <select id="category" class="input" [(ngModel)]="category" name="category">
+          <option value="">Todas</option>
+          <option value="blusas">Blusas</option>
+          <option value="pantalones">Pantalones</option>
+          <option value="vestidos">Vestidos</option>
+          <option value="faldas">Faldas</option>
+        </select>
+      </div>
+      <div class="flex flex-col justify-end" *ngIf="auth.hasRole('admin', 'staff')">
+        <label class="flex items-center gap-2 text-sm text-boutique-ink">
+          <input type="checkbox" class="h-4 w-4" [(ngModel)]="includeInactive" name="includeInactive" />
+          Incluir inactivos
+        </label>
+      </div>
+      <div class="flex items-end">
+        <button type="button" class="btn-primary w-full" (click)="load()">Aplicar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading()" class="card text-center text-sm text-boutique-mute">Cargando…</div>
+  <div *ngIf="error()" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+
+  <div *ngIf="!loading() && products().length === 0" class="card text-center text-sm text-boutique-mute">
+    Sin productos para los filtros actuales.
+  </div>
+
+  <div *ngIf="!loading() && products().length > 0" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <article *ngFor="let p of products()" class="card flex flex-col overflow-hidden p-0" [class.opacity-60]="!p.isActive">
+      <div class="relative aspect-square w-full bg-stone-100">
+        <app-product-image
+          [imageDocumentId]="p.imageDocumentId"
+          [imageUrl]="p.imageUrl"
+          [alt]="p.name"
+          sizeClass="h-full w-full"
+          rounded=""
+        ></app-product-image>
+        <span *ngIf="!p.isActive" class="absolute right-2 top-2 rounded bg-stone-800 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-white">
+          Inactivo
+        </span>
+      </div>
+      <div class="flex flex-1 flex-col gap-2 p-4">
+        <div class="flex items-start justify-between gap-2">
+          <span class="font-mono text-[10px] uppercase tracking-widest text-boutique-mute">{{ p.sku }}</span>
+          <span [class]="p.isActive ? 'badge-active' : 'badge-deleted'">
+            {{ p.isActive ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+        <h3 class="line-clamp-2 text-base">{{ p.name }}</h3>
+        <p class="text-xs uppercase tracking-wide text-boutique-mute">{{ p.category }}</p>
+        <p class="font-display text-xl tabular-nums">{{ formatCurrency(p.basePrice) }}</p>
+        <p class="text-xs text-boutique-mute">{{ variantSummary(p) }}</p>
+
+        <div *ngIf="auth.hasRole('admin')" class="mt-3 flex flex-wrap gap-2 border-t border-boutique-line pt-3">
+          <a [routerLink]="['/products', p.id, 'edit']" class="btn-secondary flex-1 text-xs">Editar</a>
+          <button
+            *ngIf="p.isActive"
+            type="button"
+            class="btn-danger flex-1 text-xs"
+            (click)="deactivate(p)"
+            [disabled]="busyId() === p.id"
+          >
+            {{ busyId() === p.id ? '…' : 'Desactivar' }}
+          </button>
+          <button
+            *ngIf="!p.isActive"
+            type="button"
+            class="btn-primary flex-1 text-xs"
+            (click)="activate(p)"
+            [disabled]="busyId() === p.id"
+          >
+            {{ busyId() === p.id ? '…' : 'Reactivar' }}
+          </button>
+        </div>
+      </div>
+    </article>
+  </div>
+</div>

@@ -1,0 +1,97 @@
+<div class="space-y-6">
+  <div>
+    <h2>Bitácora de auditoría</h2>
+    <p class="text-sm text-boutique-mute">Cada acción sobre documentos sensibles queda registrada con actor, hora y metadata.</p>
+  </div>
+
+  <div class="card flex flex-wrap items-end gap-4">
+    <div class="min-w-[260px] flex-1">
+      <label class="label" for="docFilter">Filtrar por documento (UUID)</label>
+      <input id="docFilter" class="input" [(ngModel)]="documentId" name="documentId" placeholder="Pegar UUID del documento" />
+    </div>
+    <div>
+      <label class="label" for="actionFilter">Acción</label>
+      <select id="actionFilter" class="input" [(ngModel)]="actionFilter" name="actionFilter">
+        <option value="">Todas</option>
+        <option value="upload">Subida</option>
+        <option value="read">Lectura</option>
+        <option value="download">Descarga</option>
+        <option value="verify">Verificación</option>
+        <option value="edit">Edición</option>
+        <option value="delete">Eliminación</option>
+      </select>
+    </div>
+    <button class="btn-primary" (click)="load()">Aplicar</button>
+  </div>
+
+  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
+  <div *ngIf="!loading() && filtered().length === 0" class="card text-center text-sm text-boutique-mute">
+    Sin entradas para los filtros actuales.
+  </div>
+
+  <div *ngIf="filtered().length > 0" class="card overflow-x-auto p-0">
+    <table class="table-base">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Acción</th>
+          <th>Actor</th>
+          <th>Rol</th>
+          <th>Documento</th>
+          <th>Origen</th>
+          <th class="text-right"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <ng-container *ngFor="let e of filtered()">
+          <tr>
+            <td class="whitespace-nowrap text-sm">{{ e.created_at | date:'short' }}</td>
+            <td>
+              <span [class]="actionClass(e.action)">{{ actionLabel(e.action) }}</span>
+            </td>
+            <td>
+              <div class="font-medium">{{ e.actor_email || '—' }}</div>
+              <div *ngIf="e.actor_user_id" class="font-mono text-[10px] text-boutique-mute" [title]="e.actor_user_id">
+                {{ e.actor_user_id | shortId:8:4 }}
+              </div>
+            </td>
+            <td class="capitalize text-sm">{{ e.actor_role || '—' }}</td>
+            <td>
+              <div *ngIf="e.document_id" class="space-y-0.5">
+                <div class="font-medium">{{ documentLabel(e.document_id) }}</div>
+                <div class="font-mono text-[10px] text-boutique-mute" [title]="e.document_id">
+                  {{ e.document_id | shortId:8:4 }}
+                </div>
+              </div>
+              <span *ngIf="!e.document_id" class="text-boutique-mute">—</span>
+            </td>
+            <td class="text-xs text-boutique-mute">{{ e.ip_address || '—' }}</td>
+            <td class="text-right">
+              <button class="btn-secondary text-xs" (click)="toggleExpand(e.id)">
+                {{ expandedId() === e.id ? 'Ocultar' : 'Detalle' }}
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="expandedId() === e.id">
+            <td colspan="7" class="bg-stone-50">
+              <div class="space-y-2 p-4 text-xs">
+                <div>
+                  <span class="font-semibold text-boutique-ink">Request id:</span>
+                  <span class="ml-2 font-mono">{{ e.request_id || '—' }}</span>
+                </div>
+                <div>
+                  <span class="font-semibold text-boutique-ink">User-Agent:</span>
+                  <span class="ml-2 break-all">{{ e.user_agent || '—' }}</span>
+                </div>
+                <div>
+                  <span class="font-semibold text-boutique-ink">Metadata:</span>
+                  <pre class="mt-1 max-h-56 overflow-auto rounded bg-white p-3 font-mono text-[11px] leading-snug">{{ metadataPretty(e.metadata) }}</pre>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+</div>

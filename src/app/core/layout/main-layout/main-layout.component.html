@@ -1,0 +1,41 @@
+<div class="flex h-screen overflow-hidden">
+  <aside class="hidden w-64 shrink-0 border-r border-boutique-line bg-white md:flex md:flex-col">
+    <div class="px-6 py-6 border-b border-boutique-line">
+      <p class="text-xs uppercase tracking-widest text-boutique-mute">FICCT</p>
+      <p class="font-display text-2xl text-boutique-ink">Boutique</p>
+      <p class="mt-1 text-xs text-boutique-mute">Panel administrativo</p>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
+      <ng-container *ngFor="let item of navItems">
+        <a
+          *ngIf="canSee(item)"
+          [routerLink]="item.route"
+          routerLinkActive="bg-stone-100 text-boutique-ink"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="mb-1 flex items-center rounded-md px-3 py-2 text-sm font-medium text-boutique-mute hover:bg-stone-50 hover:text-boutique-ink"
+        >
+          {{ item.label }}
+        </a>
+      </ng-container>
+    </nav>
+
+    <div class="border-t border-boutique-line p-4">
+      <p class="text-sm font-semibold text-boutique-ink">{{ auth.user()?.fullName }}</p>
+      <p class="text-xs text-boutique-mute capitalize">{{ auth.user()?.role }}</p>
+      <button type="button" class="btn-secondary mt-3 w-full" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto bg-boutique-paper">
+    <header class="border-b border-boutique-line bg-white px-8 py-5">
+      <div class="flex items-center justify-between">
+        <h1 class="font-display text-2xl text-boutique-ink">Boutique Administración</h1>
+        <span class="text-sm text-boutique-mute">{{ auth.user()?.email }}</span>
+      </div>
+    </header>
+    <section class="px-8 py-6">
+      <router-outlet />
+    </section>
+  </main>
+</div>

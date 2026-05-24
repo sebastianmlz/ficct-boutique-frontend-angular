@@ -1,0 +1,43 @@
+<div class="space-y-2">
+  <p class="label">{{ label }}</p>
+
+  <button
+    type="button"
+    class="relative flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-stone-50 p-6 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-boutique-ink"
+    [class.border-boutique-line]="!dragging() && !error()"
+    [class.border-boutique-ink]="dragging() && !error()"
+    [class.border-red-400]="!!error()"
+    (click)="openPicker()"
+    (keydown.enter)="openPicker()"
+    (keydown.space)="$event.preventDefault(); openPicker()"
+  >
+    <input #fileInput type="file" [accept]="accept" class="hidden" (change)="onFileChange($event)" />
+
+    <ng-container *ngIf="chosen(); else placeholder">
+      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-boutique-ink">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-6 w-6">
+          <path d="M14 3h-4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7l-4-4z" />
+          <path d="M14 3v4h4" />
+        </svg>
+      </div>
+      <p class="mt-3 text-sm font-medium text-boutique-ink">{{ chosen()!.name }}</p>
+      <p class="text-xs text-boutique-mute">{{ formatBytes(chosen()!.size) }} · {{ chosen()!.type || 'desconocido' }}</p>
+      <div class="mt-3 flex gap-2">
+        <button type="button" class="btn-secondary" (click)="$event.stopPropagation(); openPicker()">Cambiar</button>
+        <button type="button" class="btn-secondary" (click)="$event.stopPropagation(); clear()">Quitar</button>
+      </div>
+    </ng-container>
+
+    <ng-template #placeholder>
+      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-boutique-mute">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-6 w-6">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </div>
+      <p class="mt-3 text-sm font-medium text-boutique-ink">Arrastra el archivo o haz clic para elegir</p>
+      <p class="mt-1 text-xs text-boutique-mute">{{ hint }}</p>
+    </ng-template>
+  </button>
+
+  <p *ngIf="error()" class="text-xs text-red-600">{{ error() }}</p>
+</div>

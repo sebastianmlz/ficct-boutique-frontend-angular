@@ -1,0 +1,191 @@
+<div class="space-y-6">
+  <div>
+    <h2>Inventario</h2>
+    <p class="text-sm text-boutique-mute">
+      Tabla paginada por variante y sucursal. Ajusta stock y nivel de reorden directamente en la fila.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div class="md:col-span-2">
+        <label class="label" for="invSearch">Buscar</label>
+        <input id="invSearch" class="input" type="search" placeholder="Nombre, SKU producto o SKU variante" [(ngModel)]="search" (keyup.enter)="applyFilters()" />
+      </div>
+      <div>
+        <label class="label" for="invBranch">Sucursal</label>
+        <select id="invBranch" class="input" [(ngModel)]="branchId">
+          <option value="">Todas</option>
+          <option *ngFor="let b of branches()" [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="invSize">Talle</label>
+        <select id="invSize" class="input" [(ngModel)]="size">
+          <option value="">Todos</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="invColor">Color</label>
+        <select id="invColor" class="input" [(ngModel)]="color">
+          <option value="">Todos</option>
+          <option value="negro">Negro</option>
+          <option value="blanco">Blanco</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="invStatus">Estado</label>
+        <select id="invStatus" class="input" [(ngModel)]="status">
+          <option value="">Cualquiera</option>
+          <option value="ok">OK</option>
+          <option value="low">Bajo stock</option>
+          <option value="critical">Crítico</option>
+          <option value="inactive">Inactivo</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" class="h-4 w-4" [(ngModel)]="onlyLowStock" /> Solo bajo stock
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" class="h-4 w-4" [(ngModel)]="includeInactiveVariants" /> Incluir variantes inactivas
+      </label>
+      <div class="flex gap-2">
+        <button type="button" class="btn-secondary" (click)="resetFilters()">Limpiar</button>
+        <button type="button" class="btn-primary" (click)="applyFilters()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="entries().length > 0" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Filas en página</p>
+      <p class="mt-2 font-display text-2xl tabular-nums">{{ summary().count }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Total filtrado</p>
+      <p class="mt-2 font-display text-2xl tabular-nums">{{ total() }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Unidades visibles</p>
+      <p class="mt-2 font-display text-2xl tabular-nums">{{ summary().totalUnits }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Bajo stock visibles</p>
+      <p class="mt-2 font-display text-2xl tabular-nums" [class.text-amber-700]="summary().low > 0">{{ summary().low }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
+  <div *ngIf="error()" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+  <div *ngIf="!loading() && entries().length === 0" class="card text-center text-sm text-boutique-mute">
+    Sin resultados para los filtros actuales.
+  </div>
+
+  <div *ngIf="entries().length > 0" class="card overflow-x-auto p-0">
+    <table class="table-base">
+      <thead>
+        <tr>
+          <th class="w-2/5">Producto</th>
+          <th>Variante</th>
+          <th>Sucursal</th>
+          <th class="text-right">Stock</th>
+          <th class="text-right">Reorden</th>
+          <th>Estado</th>
+          <th>Actualizado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <tr *ngFor="let e of entries()" [class.opacity-60]="e.variant && !e.variant.isActive">
+          <td>
+            <div class="flex items-center gap-3">
+              <app-product-image
+                [imageDocumentId]="e.product?.imageDocumentId ?? null"
+                [imageUrl]="e.product?.imageUrl ?? null"
+                [alt]="e.product?.name ?? ''"
+                sizeClass="h-12 w-12"
+              ></app-product-image>
+              <div>
+                <div class="font-medium">{{ e.product?.name ?? '—' }}</div>
+                <div class="text-xs text-boutique-mute">{{ e.product?.sku ?? '—' }} · {{ e.product?.category ?? '' }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="font-medium">{{ e.variant?.size }} · {{ e.variant?.color }}</div>
+            <div class="font-mono text-[10px] text-boutique-mute">{{ e.variant?.sku }}</div>
+          </td>
+          <td>
+            <div class="font-medium">{{ e.branch.name }}</div>
+            <div class="text-xs text-boutique-mute">{{ e.branch.code }}</div>
+          </td>
+          <td class="text-right">
+            <input
+              type="number"
+              min="0"
+              [value]="e.quantity"
+              [disabled]="busyId() === e.id"
+              class="w-20 rounded-md border border-boutique-line bg-white px-2 py-1 text-right text-sm tabular-nums focus:border-boutique-ink focus:outline-none focus:ring-1 focus:ring-boutique-ink"
+              (blur)="onCellBlur($event, e, 'stock')"
+            />
+          </td>
+          <td class="text-right">
+            <input
+              type="number"
+              min="0"
+              [value]="e.reorderLevel"
+              [disabled]="busyId() === e.id"
+              class="w-20 rounded-md border border-boutique-line bg-white px-2 py-1 text-right text-sm tabular-nums focus:border-boutique-ink focus:outline-none focus:ring-1 focus:ring-boutique-ink"
+              (blur)="onCellBlur($event, e, 'reorder')"
+            />
+          </td>
+          <td>
+            <span [class]="statusFor(e).className">{{ statusFor(e).label }}</span>
+          </td>
+          <td class="whitespace-nowrap text-xs text-boutique-mute">{{ e.updatedAt | date:'short' }}</td>
+          <td>
+            <div class="flex flex-wrap items-center justify-end gap-1">
+              <button type="button" class="btn-secondary px-2 py-1 text-xs" [disabled]="busyId() === e.id" (click)="adjust(e, -1)" title="Restar 1">−1</button>
+              <button type="button" class="btn-secondary px-2 py-1 text-xs" [disabled]="busyId() === e.id" (click)="adjust(e, 1)" title="Sumar 1">+1</button>
+              <button type="button" class="btn-secondary px-2 py-1 text-xs" [disabled]="busyId() === e.id" (click)="adjust(e, 10)" title="Sumar 10">+10</button>
+              <button
+                *ngIf="e.variant"
+                type="button"
+                class="px-2 py-1 text-xs"
+                [class]="e.variant.isActive ? 'btn-danger' : 'btn-primary'"
+                [disabled]="busyId() === e.id"
+                (click)="toggleVariantActive(e)"
+              >
+                {{ e.variant.isActive ? 'Desactivar' : 'Reactivar' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-boutique-line px-4 py-3">
+      <div class="text-sm text-boutique-mute">
+        Página {{ page }} de {{ pageCount() }} · {{ total() }} variantes
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="text-sm text-boutique-mute">
+          Filas por página
+          <select class="ml-2 rounded-md border border-boutique-line bg-white px-2 py-1 text-sm" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+            <option [ngValue]="50">50</option>
+            <option [ngValue]="100">100</option>
+          </select>
+        </label>
+        <button type="button" class="btn-secondary text-xs" [disabled]="page <= 1 || loading()" (click)="goPrev()">‹ Anterior</button>
+        <button type="button" class="btn-secondary text-xs" [disabled]="page >= pageCount() || loading()" (click)="goNext()">Siguiente ›</button>
+      </div>
+    </div>
+  </div>
+</div>

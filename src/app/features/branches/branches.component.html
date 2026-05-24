@@ -1,0 +1,61 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h2>Sucursales</h2>
+    <button *ngIf="auth.hasRole('admin')" class="btn-primary" (click)="showForm.set(!showForm())">
+      {{ showForm() ? 'Cerrar' : 'Nueva sucursal' }}
+    </button>
+  </div>
+
+  <form *ngIf="showForm()" [formGroup]="form" (ngSubmit)="submit()" class="card grid gap-4 md:grid-cols-2">
+    <div>
+      <label class="label" for="code">Código</label>
+      <input id="code" formControlName="code" class="input" />
+    </div>
+    <div>
+      <label class="label" for="name">Nombre</label>
+      <input id="name" formControlName="name" class="input" />
+    </div>
+    <div class="md:col-span-2">
+      <label class="label" for="address">Dirección</label>
+      <input id="address" formControlName="address" class="input" />
+    </div>
+    <div>
+      <label class="label" for="latitude">Latitud</label>
+      <input id="latitude" type="number" formControlName="latitude" class="input" step="any" />
+    </div>
+    <div>
+      <label class="label" for="longitude">Longitud</label>
+      <input id="longitude" type="number" formControlName="longitude" class="input" step="any" />
+    </div>
+    <div>
+      <label class="label" for="phone">Teléfono</label>
+      <input id="phone" formControlName="phone" class="input" />
+    </div>
+    <div class="flex items-end justify-end md:col-span-2">
+      <button type="submit" class="btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+
+  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
+  <div *ngIf="error()" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+
+  <div *ngIf="!loading() && branches().length === 0" class="card text-center text-sm text-boutique-mute">
+    Aún no hay sucursales.
+  </div>
+
+  <div *ngIf="branches().length > 0" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div *ngFor="let b of branches()" class="card">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg">{{ b.name }}</h3>
+        <span class="badge-active">{{ b.code }}</span>
+      </div>
+      <p class="mt-2 text-sm text-boutique-mute">{{ b.address }}</p>
+      <p *ngIf="b.phone" class="mt-1 text-sm">📞 {{ b.phone }}</p>
+      <p *ngIf="b.latitude !== null && b.longitude !== null" class="mt-2 text-xs text-boutique-mute">
+        {{ b.latitude }}, {{ b.longitude }}
+      </p>
+    </div>
+  </div>
+</div>

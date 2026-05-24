@@ -1,0 +1,76 @@
+<div class="space-y-6">
+  <h2>Ventas y reportes</h2>
+
+  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
+
+  <div *ngIf="!loading()" class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Total 12 meses</p>
+      <p class="mt-2 font-display text-2xl">{{ formatCurrency(totalSalesYear()) }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Meses con datos</p>
+      <p class="mt-2 font-display text-2xl">{{ monthly().length }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs uppercase tracking-wide text-boutique-mute">Unidades top 10</p>
+      <p class="mt-2 font-display text-2xl">{{ totalUnitsTop() }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="!loading()" class="card">
+    <div class="mb-4 flex items-center justify-between">
+      <h3>Ventas mensuales</h3>
+      <span class="text-xs text-boutique-mute">Últimos 12 meses</span>
+    </div>
+    <p *ngIf="monthly().length === 0" class="text-sm text-boutique-mute">Sin ventas confirmadas.</p>
+    <div *ngIf="monthly().length > 0" class="relative h-72">
+      <canvas baseChart [data]="monthlyChartData()" [options]="monthlyChartOptions" type="bar"></canvas>
+    </div>
+
+    <table *ngIf="monthly().length > 0" class="table-base mt-6">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th class="text-right">Total</th>
+          <th class="text-right">Cantidad de ventas</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <tr *ngFor="let p of monthly()">
+          <td class="capitalize">{{ formatMonth(p.month) }}</td>
+          <td class="text-right tabular-nums">{{ formatCurrency(p.totalSales) }}</td>
+          <td class="text-right tabular-nums">{{ p.saleCount }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!loading()" class="card">
+    <div class="mb-4 flex items-center justify-between">
+      <h3>Top 10 prendas más vendidas</h3>
+      <span class="text-xs text-boutique-mute">Por unidades</span>
+    </div>
+    <p *ngIf="popular().length === 0" class="text-sm text-boutique-mute">Sin datos.</p>
+    <div *ngIf="popular().length > 0" class="relative h-72">
+      <canvas baseChart [data]="popularChartData()" [options]="popularChartOptions" type="bar"></canvas>
+    </div>
+
+    <table *ngIf="popular().length > 0" class="table-base mt-6">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="text-right">Unidades</th>
+          <th class="text-right">Ingresos</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <tr *ngFor="let row of popular(); let i = index">
+          <td class="font-medium">{{ i + 1 }}. {{ row.productName }}</td>
+          <td class="text-right tabular-nums">{{ row.unitsSold }}</td>
+          <td class="text-right tabular-nums">{{ formatCurrency(row.revenue) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,18 @@
+<ng-container *ngIf="resolvedUrl() && !failed(); else placeholder">
+  <img
+    [src]="resolvedUrl()"
+    [alt]="alt"
+    [class]="sizeClass + ' ' + rounded + ' object-cover bg-stone-100'"
+    (error)="onImgError()"
+    loading="lazy"
+  />
+</ng-container>
+<ng-template #placeholder>
+  <div [class]="sizeClass + ' ' + rounded + ' bg-stone-100 flex items-center justify-center text-boutique-mute'">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+      <path d="M3 16.5V7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5Z" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path d="m21 16-5-5-8 8" />
+    </svg>
+  </div>
+</ng-template>

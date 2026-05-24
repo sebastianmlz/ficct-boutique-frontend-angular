@@ -1,0 +1,23 @@
+node_modules
+dist
+out-tsc
+.angular
+.env
+.env.local
+.env.*.local
+coverage
+*.log
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+
+# Playwright
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Stray root-level screenshots — QA evidence lives in the Go repo's docs/qa-artifacts/.
+/*.png
+/*.jpg
+/*.jpeg
