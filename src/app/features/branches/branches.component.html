@@ -38,21 +38,28 @@
     </div>
   </form>
 
-  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
-  <div *ngIf="error()" class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+  <app-loading-state *ngIf="loading()" label="Cargando sucursales…" />
+  <app-error-state *ngIf="error()" [message]="error()!" (retry)="load()" />
 
-  <div *ngIf="!loading() && branches().length === 0" class="card text-center text-sm text-boutique-mute">
-    Aún no hay sucursales.
-  </div>
+  <app-empty-state
+    *ngIf="!loading() && !error() && branches().length === 0"
+    icon="branches"
+    title="Aún no hay sucursales"
+    subtitle="Crea la primera sucursal para empezar."
+  />
 
   <div *ngIf="branches().length > 0" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-    <div *ngFor="let b of branches()" class="card">
+    <div *ngFor="let b of branches(); trackBy: trackById" class="card">
       <div class="flex items-center justify-between">
         <h3 class="text-lg">{{ b.name }}</h3>
-        <span class="badge-active">{{ b.code }}</span>
+        <span class="badge badge-active">{{ b.code }}</span>
       </div>
-      <p class="mt-2 text-sm text-boutique-mute">{{ b.address }}</p>
-      <p *ngIf="b.phone" class="mt-1 text-sm">📞 {{ b.phone }}</p>
+      <p class="mt-2 flex items-center gap-1.5 text-sm text-boutique-mute">
+        <app-icon name="location" [size]="14" /> {{ b.address }}
+      </p>
+      <p *ngIf="b.phone" class="mt-1 flex items-center gap-1.5 text-sm text-boutique-mute">
+        <app-icon name="phone" [size]="14" /> {{ b.phone }}
+      </p>
       <p *ngIf="b.latitude !== null && b.longitude !== null" class="mt-2 text-xs text-boutique-mute">
         {{ b.latitude }}, {{ b.longitude }}
       </p>

@@ -101,7 +101,7 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-boutique-line">
-        <tr *ngFor="let e of entries()" [class.opacity-60]="e.variant && !e.variant.isActive">
+        <tr *ngFor="let e of entries(); trackBy: trackByEntryId" [class.opacity-60]="e.variant && !e.variant.isActive">
           <td>
             <div class="flex items-center gap-3">
               <app-product-image

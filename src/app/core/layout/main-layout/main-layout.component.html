@@ -13,8 +13,9 @@
           [routerLink]="item.route"
           routerLinkActive="bg-stone-100 text-boutique-ink"
           [routerLinkActiveOptions]="{ exact: false }"
-          class="mb-1 flex items-center rounded-md px-3 py-2 text-sm font-medium text-boutique-mute hover:bg-stone-50 hover:text-boutique-ink"
+          class="mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-boutique-mute hover:bg-stone-50 hover:text-boutique-ink"
         >
+          <app-icon [name]="item.icon" [size]="18" />
           {{ item.label }}
         </a>
       </ng-container>
@@ -23,7 +24,7 @@
     <div class="border-t border-boutique-line p-4">
       <p class="text-sm font-semibold text-boutique-ink">{{ auth.user()?.fullName }}</p>
       <p class="text-xs text-boutique-mute capitalize">{{ auth.user()?.role }}</p>
-      <button type="button" class="btn-secondary mt-3 w-full" (click)="logout()">Cerrar sesión</button>
+      <app-button variant="secondary" icon="logout" [block]="true" class="mt-3 block" (pressed)="logout()">Cerrar sesión</app-button>
     </div>
   </aside>
 

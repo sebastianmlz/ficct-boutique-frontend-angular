@@ -5,6 +5,10 @@ import { Apollo, gql } from 'apollo-angular';
 import { firstValueFrom } from 'rxjs';
 import { Branch } from '../../shared/models';
 import { AuthService } from '../../core/auth/auth.service';
+import { IconComponent } from '../../shared/ui/icon.component';
+import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { LoadingStateComponent } from '../../shared/ui/loading-state.component';
+import { ErrorStateComponent } from '../../shared/ui/error-state.component';
 
 const BRANCHES_QUERY = gql`
   query Branches {
@@ -21,7 +25,7 @@ const CREATE_BRANCH = gql`
 @Component({
   selector: 'app-branches',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent, EmptyStateComponent, LoadingStateComponent, ErrorStateComponent],
   templateUrl: './branches.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -47,6 +51,10 @@ export class BranchesComponent {
 
   constructor() {
     void this.load();
+  }
+
+  trackById(_: number, b: Branch): string {
+    return b.id;
   }
 
   async load(): Promise<void> {

@@ -88,6 +88,10 @@ export class InventoryComponent {
   page = 1;
   pageSize = 25;
 
+  trackByEntryId(_: number, e: InventoryEntry): string {
+    return e.id;
+  }
+
   readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize)));
   readonly summary = computed(() => {
     const list = this.entries();
