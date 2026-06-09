@@ -9,10 +9,9 @@ FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Development build keeps backend URLs pointing at localhost:* which is what
-# the browser running on the developer machine needs. For a real prod deploy,
-# either reverse-proxy via nginx or rebuild after editing environment.prod.ts.
-RUN npm run build:dev
+# Production build: bakes in environment.prod.ts (Railway Go GraphQL, AWS MS3,
+# GCP MS2). For local dev against localhost backends use `npm run build:dev`.
+RUN npm run build
 
 FROM nginx:1.27-alpine AS runtime
 RUN apk add --no-cache curl
