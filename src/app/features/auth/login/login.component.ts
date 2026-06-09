@@ -37,8 +37,8 @@ export class LoginComponent {
   private readonly router = inject(Router);
 
   readonly form: FormGroup = this.fb.group({
-    email: ['admin@ficct.local', [Validators.required, Validators.email]],
-    password: ['Admin123!', [Validators.required, Validators.minLength(8)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
   readonly loading = signal(false);

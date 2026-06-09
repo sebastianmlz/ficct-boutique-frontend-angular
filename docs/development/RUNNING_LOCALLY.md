@@ -47,9 +47,9 @@ The Go seed creates three accounts:
 
 | Email | Password | Role | What this account can do in the UI |
 |-------|----------|------|------------------------------------|
-| `admin@ficct.local` | `Admin123!` | admin | Everything — products CRUD, branches CRUD, inventory writes, AI analytics, audit log. |
-| `staff@ficct.local` | `Staff123!` | staff | Read everything, inventory adjustments (set/adjust/reorder), AI analytics. Cannot create products/branches. |
-| `cliente@ficct.local` | `Cliente123!` | customer | Login succeeds but most pages will show empty data — customer routes live on the React Native app, not here. |
+| `<admin-email>` | `<admin-password>` | admin | Everything — products CRUD, branches CRUD, inventory writes, AI analytics, audit log. |
+| `<staff-email>` | `<staff-password>` | staff | Read everything, inventory adjustments (set/adjust/reorder), AI analytics. Cannot create products/branches. |
+| `<customer-email>` | `<customer-password>` | customer | Login succeeds but most pages will show empty data — customer routes live on the React Native app, not here. |
 
 ---
 

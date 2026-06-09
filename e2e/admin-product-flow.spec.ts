@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-const ADMIN = { email: 'admin@ficct.local', password: 'Admin123!' };
+const ADMIN = {
+  email: process.env['E2E_ADMIN_EMAIL'] ?? '',
+  password: process.env['E2E_ADMIN_PASSWORD'] ?? '',
+};
 
 test.describe('Admin product lifecycle', () => {
   test('login redirects to dashboard and shows real chart data', async ({ page }) => {

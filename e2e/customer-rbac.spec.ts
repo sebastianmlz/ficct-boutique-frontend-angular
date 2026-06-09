@@ -4,9 +4,18 @@ const ADMIN_API = 'http://localhost:8093/graphql';
 
 async function loginGetToken(role: 'admin' | 'customer' | 'staff'): Promise<string> {
   const creds = {
-    admin: { email: 'admin@ficct.local', password: 'Admin123!' },
-    staff: { email: 'staff@ficct.local', password: 'Staff123!' },
-    customer: { email: 'cliente@ficct.local', password: 'Cliente123!' },
+    admin: {
+      email: process.env['E2E_ADMIN_EMAIL'] ?? '',
+      password: process.env['E2E_ADMIN_PASSWORD'] ?? '',
+    },
+    staff: {
+      email: process.env['E2E_STAFF_EMAIL'] ?? '',
+      password: process.env['E2E_STAFF_PASSWORD'] ?? '',
+    },
+    customer: {
+      email: process.env['E2E_CUSTOMER_EMAIL'] ?? '',
+      password: process.env['E2E_CUSTOMER_PASSWORD'] ?? '',
+    },
   }[role];
   const ctx = await request.newContext();
   const res = await ctx.post(ADMIN_API, {
