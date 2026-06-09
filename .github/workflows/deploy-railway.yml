@@ -1,0 +1,44 @@
+name: Deploy Angular Admin to Railway
+
+# Repo-based deployment: a push to main (or a manual run) deploys the Angular
+# Admin to the Railway `angular-admin` service from this repository, replacing
+# one-off tarball uploads. Requires a repo secret RAILWAY_TOKEN (a Railway
+# project token for ficct-boutique-project). When the secret is absent the job
+# is a green no-op so the pipeline never fails for forks/contributors.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - id: guard
+        env:
+          TOK: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -n "$TOK" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "RAILWAY_TOKEN not set — skipping deploy. Add it in repo Settings > Secrets to enable repo-based deploys."
+          fi
+
+      - if: steps.guard.outputs.ready == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.guard.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - if: steps.guard.outputs.ready == 'true'
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway (builds Dockerfile -> nginx)
+        if: steps.guard.outputs.ready == 'true'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service angular-admin --ci
