@@ -17,6 +17,17 @@ export interface UploadRequestResponse {
   upload: { url: string; method: 'PUT'; headers: Record<string, string>; expiresIn: number; key: string };
 }
 
+export interface LedgerEntry {
+  id: number;
+  document_id: string;
+  version_id: string | null;
+  sha256: string;
+  prev_chain_hash: string | null;
+  chain_hash: string;
+  recorded_by: string | null;
+  created_at?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DocumentsService {
   private readonly http = inject(HttpClient);
@@ -60,6 +71,10 @@ export class DocumentsService {
         `${this.base}/documents/${id}/verify`,
       ),
     );
+  }
+
+  ledger(id: string): Promise<LedgerEntry[]> {
+    return firstValueFrom(this.http.get<{ entries: LedgerEntry[] }>(`${this.base}/documents/${id}/ledger`)).then((r) => r.entries);
   }
 
   softDelete(id: string): Promise<{ document: DocumentRecord }> {

@@ -96,6 +96,7 @@
             <div class="flex flex-wrap items-center justify-end gap-2">
               <button class="btn-secondary" (click)="download(d)" [disabled]="d.status !== 'active'">Descargar</button>
               <button *ngIf="auth.hasRole('admin', 'staff')" class="btn-secondary" (click)="verify(d)" [disabled]="d.status !== 'active'">Verificar</button>
+              <button *ngIf="auth.hasRole('admin', 'staff')" class="btn-secondary" (click)="viewLedger(d)" [disabled]="d.status !== 'active'">Cadena</button>
               <button *ngIf="auth.hasRole('admin')" class="btn-danger" (click)="remove(d)" [disabled]="d.status === 'deleted'">Eliminar</button>
             </div>
           </td>
@@ -135,5 +136,61 @@
         </dd>
       </div>
     </dl>
+  </div>
+
+  <!-- Blockchain / Hash Ledger / Integridad -->
+  <div *ngIf="ledgerDoc" class="card border-2 border-boutique-ink">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h3>Cadena de bloques · Hash Ledger</h3>
+        <p class="text-sm text-boutique-mute">
+          Integridad inmutable de “{{ ledgerDoc.title }}”. Cada versión encadena su SHA-256 con el hash del bloque anterior (ledger tipo blockchain privado, a prueba de manipulación).
+        </p>
+      </div>
+      <button class="btn-secondary" (click)="closeLedger()">Cerrar</button>
+    </div>
+
+    <div *ngIf="loadingLedger" class="mt-4 text-sm text-boutique-mute">Cargando cadena…</div>
+
+    <dl *ngIf="verifyResult" class="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+      <div class="flex justify-between gap-2">
+        <dt class="text-boutique-mute">Integridad del archivo:</dt>
+        <dd><span [class]="verifyResult.intact ? 'badge-active' : 'badge-deleted'">{{ verifyResult.intact ? 'íntegro' : 'ALTERADO' }}</span></dd>
+      </div>
+      <div class="flex justify-between gap-2">
+        <dt class="text-boutique-mute">Cadena de hashes:</dt>
+        <dd><span [class]="verifyResult.chainIntact ? 'badge-active' : 'badge-deleted'">{{ verifyResult.chainIntact ? 'íntegra' : 'ROTA' }}</span></dd>
+      </div>
+      <div class="flex flex-wrap justify-between gap-2 sm:col-span-2">
+        <dt class="text-boutique-mute">SHA-256 almacenado:</dt>
+        <dd class="font-mono break-all">{{ verifyResult.storedSha }}</dd>
+      </div>
+      <div class="flex flex-wrap justify-between gap-2 sm:col-span-2">
+        <dt class="text-boutique-mute">SHA-256 actual:</dt>
+        <dd class="font-mono break-all">{{ verifyResult.currentSha }}</dd>
+      </div>
+    </dl>
+
+    <div *ngIf="ledgerEntries() as entries" class="mt-4 overflow-x-auto">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Bloque</th>
+            <th>SHA-256 del documento</th>
+            <th>Hash previo</th>
+            <th>Hash de cadena</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-boutique-line">
+          <tr *ngFor="let e of entries; let i = index">
+            <td class="tabular-nums">#{{ i }}</td>
+            <td class="font-mono text-xs" [title]="e.sha256">{{ e.sha256 | shortId:10:6 }}</td>
+            <td class="font-mono text-xs" [title]="e.prev_chain_hash || 'génesis'">{{ e.prev_chain_hash ? (e.prev_chain_hash | shortId:8:6) : 'génesis' }}</td>
+            <td class="font-mono text-xs" [title]="e.chain_hash">{{ e.chain_hash | shortId:8:6 }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="entries.length === 0" class="mt-2 text-sm text-boutique-mute">Sin entradas en la cadena.</p>
+    </div>
   </div>
 </div>

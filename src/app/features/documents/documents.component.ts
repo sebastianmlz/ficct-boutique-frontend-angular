@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DocumentRecord } from '../../shared/models';
-import { DocumentsService } from './documents.service';
+import { DocumentsService, LedgerEntry } from './documents.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { FileDropComponent } from '../../shared/components/file-drop/file-drop.component';
 import { AutosizeTextareaDirective } from '../../shared/directives/autosize-textarea.directive';
@@ -48,6 +48,11 @@ export class DocumentsComponent {
 
   verifyingId: string | null = null;
   verifyResult: { intact: boolean; chainIntact: boolean; storedSha: string; currentSha: string } | null = null;
+
+  // Hash-ledger (private blockchain) viewer state.
+  readonly ledgerEntries = signal<LedgerEntry[] | null>(null);
+  ledgerDoc: DocumentRecord | null = null;
+  loadingLedger = false;
 
   acceptFor(cat: DocumentRecord['category']): string {
     return ACCEPT_BY_CATEGORY[cat];
@@ -143,6 +148,37 @@ export class DocumentsComponent {
 
   closeVerify(): void {
     this.verifyingId = null;
+    this.verifyResult = null;
+  }
+
+  // Opens the per-document hash-chain ledger and runs an integrity check so the
+  // admin can see the SHA-256 chain (chain_hash / prev_chain_hash) plus the
+  // intact / chainIntact verdict in one place.
+  async viewLedger(d: DocumentRecord): Promise<void> {
+    this.ledgerDoc = d;
+    this.ledgerEntries.set(null);
+    this.verifyResult = null;
+    this.loadingLedger = true;
+    const [entries, verify] = await Promise.allSettled([this.service.ledger(d.id), this.service.verify(d.id)]);
+    if (entries.status === 'fulfilled') {
+      this.ledgerEntries.set(entries.value);
+    } else {
+      this.error.set((entries.reason as { message?: string })?.message ?? 'Error al cargar la cadena');
+    }
+    if (verify.status === 'fulfilled') {
+      this.verifyResult = {
+        intact: verify.value.intact,
+        chainIntact: verify.value.chainIntact,
+        storedSha: verify.value.storedSha,
+        currentSha: verify.value.currentSha,
+      };
+    }
+    this.loadingLedger = false;
+  }
+
+  closeLedger(): void {
+    this.ledgerDoc = null;
+    this.ledgerEntries.set(null);
     this.verifyResult = null;
   }
 
