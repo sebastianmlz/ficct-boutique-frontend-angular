@@ -28,6 +28,7 @@ export class MainLayoutComponent {
     { label: 'Inventario', route: '/inventory', icon: 'inventory', roles: ['admin', 'staff'] },
     { label: 'Sucursales', route: '/branches', icon: 'branches' },
     { label: 'Ventas y reportes', route: '/sales', icon: 'sales' },
+    { label: 'Pedidos', route: '/orders', icon: 'inbox', roles: ['admin', 'staff'] },
     { label: 'Documentos', route: '/documents', icon: 'documents' },
     { label: 'Auditoría', route: '/audit', icon: 'audit', roles: ['admin'] },
     { label: 'Analítica IA', route: '/ai-analytics', icon: 'ai', roles: ['admin', 'staff'] },

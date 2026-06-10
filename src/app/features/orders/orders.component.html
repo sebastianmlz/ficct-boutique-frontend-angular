@@ -1,0 +1,239 @@
+<div class="space-y-6">
+  <div>
+    <h2>Pedidos y logística</h2>
+    <p class="text-sm text-boutique-mute">
+      Confirma ventas pendientes para generar el pedido y la factura, y sigue el ciclo de vida de cada pedido.
+    </p>
+  </div>
+
+  <!-- Lifecycle legend (CU06): Sale pending -> confirmed creates the Order, which then advances -->
+  <div class="card">
+    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-boutique-mute">Ciclo de vida del pedido</p>
+    <div class="flex flex-wrap items-center gap-2 text-sm">
+      <span class="badge-pending">Venta: pendiente</span>
+      <span class="text-boutique-mute">→</span>
+      <span class="badge-active">Venta: confirmada</span>
+      <span class="text-boutique-mute">⇒ crea pedido</span>
+      <span class="text-boutique-mute">→</span>
+      <span class="badge-pending">placed</span>
+      <span class="text-boutique-mute">→</span>
+      <span class="badge bg-sky-50 text-sky-700">preparing</span>
+      <span class="text-boutique-mute">→</span>
+      <span class="badge bg-violet-50 text-violet-700">ready</span>
+      <span class="text-boutique-mute">→</span>
+      <span class="badge-active">delivered</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex items-center gap-2 border-b border-boutique-line">
+    <button
+      type="button"
+      class="-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors"
+      [class]="tab() === 'sales' ? 'border-boutique-ink text-boutique-ink' : 'border-transparent text-boutique-mute hover:text-boutique-ink'"
+      (click)="setTab('sales')"
+    >
+      Ventas
+    </button>
+    <button
+      type="button"
+      class="-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors"
+      [class]="tab() === 'orders' ? 'border-boutique-ink text-boutique-ink' : 'border-transparent text-boutique-mute hover:text-boutique-ink'"
+      (click)="setTab('orders')"
+    >
+      Pedidos
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-end gap-3">
+    <div *ngIf="tab() === 'sales'">
+      <label class="label" for="saleStatus">Estado de la venta</label>
+      <select id="saleStatus" class="input" [(ngModel)]="saleStatus" (change)="refresh()">
+        <option value="">Todas</option>
+        <option value="pending">Pendiente</option>
+        <option value="confirmed">Confirmada</option>
+        <option value="cancelled">Cancelada</option>
+      </select>
+    </div>
+    <div *ngIf="tab() === 'orders'">
+      <label class="label" for="orderStatus">Estado del pedido</label>
+      <select id="orderStatus" class="input" [(ngModel)]="orderStatus" (change)="refresh()">
+        <option value="">Todos</option>
+        <option value="placed">placed</option>
+        <option value="preparing">preparing</option>
+        <option value="ready">ready</option>
+        <option value="delivered">delivered</option>
+        <option value="cancelled">cancelled</option>
+      </select>
+    </div>
+    <button type="button" class="btn-secondary" [disabled]="loading()" (click)="refresh()">Actualizar</button>
+  </div>
+
+  <!-- Feedback states -->
+  <div *ngIf="success()" class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+    {{ success() }}
+  </div>
+  <div *ngIf="error()" class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    {{ error() }}
+  </div>
+  <div *ngIf="loading()" class="card text-sm text-boutique-mute">Cargando…</div>
+
+  <!-- SALES TAB -->
+  <div *ngIf="tab() === 'sales' && !loading()">
+    <div *ngIf="sales().length === 0" class="card text-center text-sm text-boutique-mute">No hay ventas para el filtro actual.</div>
+    <div *ngIf="sales().length > 0" class="card overflow-x-auto p-0">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Venta</th>
+            <th>Sucursal</th>
+            <th>Estado</th>
+            <th class="text-right">Ítems</th>
+            <th class="text-right">Total</th>
+            <th>Creada</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-boutique-line">
+          <tr *ngFor="let s of sales(); trackBy: trackById" class="cursor-pointer hover:bg-stone-50" (click)="openSale(s)">
+            <td class="font-mono text-xs">{{ s.id.slice(0, 8) }}…</td>
+            <td>
+              <div class="font-medium">{{ s.branch.name }}</div>
+              <div class="text-xs text-boutique-mute">{{ s.branch.code }}</div>
+            </td>
+            <td><span [class]="saleBadge(s.status)">{{ s.status }}</span></td>
+            <td class="text-right tabular-nums">{{ itemCount(s) }}</td>
+            <td class="text-right tabular-nums">{{ money(s.total, s.currency) }}</td>
+            <td class="whitespace-nowrap text-xs text-boutique-mute">{{ s.createdAt | date: 'short' }}</td>
+            <td class="text-right" (click)="$event.stopPropagation()">
+              <button
+                *ngIf="s.status === 'pending'"
+                type="button"
+                class="btn-primary px-3 py-1 text-xs"
+                [disabled]="busyId() === s.id"
+                (click)="confirm(s)"
+              >
+                {{ busyId() === s.id ? 'Confirmando…' : 'Confirmar pedido' }}
+              </button>
+              <span *ngIf="s.status !== 'pending'" class="text-xs text-boutique-mute">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ORDERS TAB -->
+  <div *ngIf="tab() === 'orders' && !loading()">
+    <div *ngIf="orderList().length === 0" class="card text-center text-sm text-boutique-mute">No hay pedidos para el filtro actual.</div>
+    <div *ngIf="orderList().length > 0" class="card overflow-x-auto p-0">
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Sucursal</th>
+            <th>Estado</th>
+            <th class="text-right">Total</th>
+            <th>Creado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-boutique-line">
+          <tr *ngFor="let o of orderList(); trackBy: trackById" class="cursor-pointer hover:bg-stone-50" (click)="openOrder(o)">
+            <td class="font-mono text-xs font-medium">{{ o.code }}</td>
+            <td>
+              <div class="font-medium">{{ o.sale.branch.name }}</div>
+              <div class="text-xs text-boutique-mute">{{ o.sale.branch.code }}</div>
+            </td>
+            <td><span [class]="orderBadge(o.status)">{{ o.status }}</span></td>
+            <td class="text-right tabular-nums">{{ money(o.sale.total, o.sale.currency) }}</td>
+            <td class="whitespace-nowrap text-xs text-boutique-mute">{{ o.createdAt | date: 'short' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DETAIL: SALE -->
+  <div *ngIf="selectedSale() as s" class="card space-y-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <h3>Detalle de la venta</h3>
+        <p class="font-mono text-xs text-boutique-mute">{{ s.id }}</p>
+      </div>
+      <button type="button" class="btn-secondary px-2 py-1 text-xs" (click)="closeDetail()">Cerrar</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+      <div><p class="text-xs uppercase text-boutique-mute">Estado</p><span [class]="saleBadge(s.status)">{{ s.status }}</span></div>
+      <div><p class="text-xs uppercase text-boutique-mute">Sucursal</p><p class="font-medium">{{ s.branch.name }}</p></div>
+      <div><p class="text-xs uppercase text-boutique-mute">Confirmada</p><p>{{ s.confirmedAt ? (s.confirmedAt | date: 'short') : '—' }}</p></div>
+      <div><p class="text-xs uppercase text-boutique-mute">Total</p><p class="font-display text-lg tabular-nums">{{ money(s.total, s.currency) }}</p></div>
+    </div>
+    <table class="table-base">
+      <thead>
+        <tr><th>Variante</th><th class="text-right">Cantidad</th><th class="text-right">Precio</th><th class="text-right">Subtotal</th></tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <tr *ngFor="let it of s.items">
+          <td class="font-mono text-xs">{{ it.variantId.slice(0, 8) }}…</td>
+          <td class="text-right tabular-nums">{{ it.quantity }}</td>
+          <td class="text-right tabular-nums">{{ money(it.unitPrice, s.currency) }}</td>
+          <td class="text-right tabular-nums">{{ money(it.lineTotal, s.currency) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="flex justify-end">
+      <button
+        *ngIf="s.status === 'pending'"
+        type="button"
+        class="btn-primary"
+        [disabled]="busyId() === s.id"
+        (click)="confirm(s)"
+      >
+        {{ busyId() === s.id ? 'Confirmando…' : 'Confirmar pedido' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- DETAIL: ORDER -->
+  <div *ngIf="selectedOrder() as o" class="card space-y-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <h3>Pedido {{ o.code }}</h3>
+        <p class="font-mono text-xs text-boutique-mute">{{ o.id }}</p>
+      </div>
+      <button type="button" class="btn-secondary px-2 py-1 text-xs" (click)="closeDetail()">Cerrar</button>
+    </div>
+
+    <!-- Read-only lifecycle progress -->
+    <div class="flex flex-wrap items-center gap-2">
+      <ng-container *ngFor="let stage of orderStages; let last = last">
+        <span [class]="stageReached(o.status, stage) ? orderBadge(stage) : 'badge-deleted opacity-50'">{{ stage }}</span>
+        <span *ngIf="!last" class="text-boutique-mute">→</span>
+      </ng-container>
+      <span *ngIf="o.status === 'cancelled'" class="badge-deleted">cancelled</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+      <div><p class="text-xs uppercase text-boutique-mute">Estado</p><span [class]="orderBadge(o.status)">{{ o.status }}</span></div>
+      <div><p class="text-xs uppercase text-boutique-mute">Sucursal</p><p class="font-medium">{{ o.sale.branch.name }}</p></div>
+      <div><p class="text-xs uppercase text-boutique-mute">Creado</p><p>{{ o.createdAt | date: 'short' }}</p></div>
+      <div><p class="text-xs uppercase text-boutique-mute">Total</p><p class="font-display text-lg tabular-nums">{{ money(o.sale.total, o.sale.currency) }}</p></div>
+    </div>
+
+    <table *ngIf="o.sale.items?.length" class="table-base">
+      <thead>
+        <tr><th>Variante</th><th class="text-right">Cantidad</th><th class="text-right">Precio</th><th class="text-right">Subtotal</th></tr>
+      </thead>
+      <tbody class="divide-y divide-boutique-line">
+        <tr *ngFor="let it of o.sale.items">
+          <td class="font-mono text-xs">{{ it.variantId.slice(0, 8) }}…</td>
+          <td class="text-right tabular-nums">{{ it.quantity }}</td>
+          <td class="text-right tabular-nums">{{ money(it.unitPrice, o.sale.currency) }}</td>
+          <td class="text-right tabular-nums">{{ money(it.lineTotal, o.sale.currency) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="o.notes" class="text-sm text-boutique-mute">Notas: {{ o.notes }}</p>
+  </div>
+</div>
