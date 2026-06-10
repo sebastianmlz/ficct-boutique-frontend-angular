@@ -162,8 +162,23 @@ export function forecastLineOptions(): ChartOptions<'line'> {
   };
 }
 
-export function clusterScatterData(rows: { customer_id: string; cluster: number; distance: number }[]): ChartConfiguration<'bubble'>['data'] {
-  const groups = new Map<number, { customer_id: string; cluster: number; distance: number }[]>();
+export interface RfmSegmentRow {
+  customer_id: string;
+  cluster: number;
+  distance: number;
+  recency_days?: number;
+  frequency?: number;
+  monetary?: number;
+}
+
+/**
+ * RFM scatter for CU09: x = Recency (days), y = Monetary (Bs), bubble size =
+ * Frequency, colour = KMeans cluster. This plots the actual RFM features the
+ * model clustered on, grouped by the assigned segment.
+ */
+export function clusterScatterData(rows: RfmSegmentRow[]): ChartConfiguration<'bubble'>['data'] {
+  const maxFreq = Math.max(1, ...rows.map((r) => r.frequency ?? 0));
+  const groups = new Map<number, RfmSegmentRow[]>();
   for (const r of rows) {
     if (!groups.has(r.cluster)) groups.set(r.cluster, []);
     groups.get(r.cluster)!.push(r);
@@ -171,7 +186,11 @@ export function clusterScatterData(rows: { customer_id: string; cluster: number;
   return {
     datasets: Array.from(groups.entries()).map(([cluster, items]) => ({
       label: `Cluster ${cluster}`,
-      data: items.map((it, idx) => ({ x: idx, y: it.distance, r: 8 })),
+      data: items.map((it) => ({
+        x: it.recency_days ?? 0,
+        y: it.monetary ?? 0,
+        r: 6 + ((it.frequency ?? 0) / maxFreq) * 14,
+      })),
       backgroundColor: PALETTE[cluster % PALETTE.length] + 'cc',
       borderColor: PALETTE[cluster % PALETTE.length],
     })),
@@ -187,19 +206,20 @@ export function clusterScatterOptions(): ChartOptions<'bubble'> {
       tooltip: {
         backgroundColor: BOUTIQUE_INK,
         callbacks: {
-          label: (ctx) => ` distancia ${Number(ctx.parsed.y).toFixed(3)}`,
+          label: (ctx) => ` Recency ${Number(ctx.parsed.x)} d · Monetary Bs ${Number(ctx.parsed.y)}`,
         },
       },
     },
     scales: {
       x: {
-        title: { display: true, text: 'Cliente (índice)', color: BOUTIQUE_MUTE },
+        title: { display: true, text: 'Recency (días) — menor = más reciente', color: BOUTIQUE_MUTE },
         grid: { color: BOUTIQUE_LINE, drawTicks: false },
         ticks: { color: BOUTIQUE_MUTE },
         border: { display: false },
       },
       y: {
-        title: { display: true, text: 'Distancia al centroide', color: BOUTIQUE_MUTE },
+        title: { display: true, text: 'Monetary (Bs) — tamaño = Frequency', color: BOUTIQUE_MUTE },
+        beginAtZero: true,
         grid: { color: BOUTIQUE_LINE, drawTicks: false },
         ticks: { color: BOUTIQUE_MUTE },
         border: { display: false },

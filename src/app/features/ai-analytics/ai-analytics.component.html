@@ -54,15 +54,27 @@
         <label class="label" for="cK">Número de clusters (k)</label>
         <input id="cK" type="number" min="2" max="10" class="input" [(ngModel)]="k" name="k" />
       </div>
-      <button class="btn-primary" (click)="runCluster()" [disabled]="clusterBusy()">
-        {{ clusterBusy() ? 'Calculando…' : 'Generar segmentos' }}
-      </button>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn-primary" (click)="runCluster()" [disabled]="clusterBusy()">
+          {{ clusterBusy() ? 'Calculando…' : 'Generar segmentos' }}
+        </button>
+        <button class="btn-secondary" (click)="loadSegments()" [disabled]="clusterBusy()">
+          Ver segmentos guardados
+        </button>
+      </div>
 
       <div *ngIf="clusterError()" class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
         {{ clusterError() }}
       </div>
 
+      <div *ngIf="!clusterBusy() && segments().length === 0 && !clusterError()" class="rounded-md border border-boutique-line bg-stone-50 px-3 py-2 text-sm text-boutique-mute">
+        Aún no hay segmentos. Genera una corrida o carga los segmentos guardados.
+      </div>
+
       <div *ngIf="segments().length > 0" class="mt-4 space-y-3">
+        <p class="text-xs text-boutique-mute">
+          Scatter RFM: eje X = Recency (días), eje Y = Monetary (Bs), tamaño de burbuja = Frequency, color = segmento (KMeans).
+        </p>
         <div class="relative h-60">
           <canvas baseChart [data]="clusterChartData()" [options]="clusterChartOptions" type="bubble"></canvas>
         </div>
@@ -70,7 +82,10 @@
           <thead>
             <tr>
               <th>Cliente</th>
-              <th>Cluster</th>
+              <th>Segmento</th>
+              <th class="text-right">Recency</th>
+              <th class="text-right">Frequency</th>
+              <th class="text-right">Monetary</th>
               <th class="text-right">Distancia</th>
             </tr>
           </thead>
@@ -83,6 +98,9 @@
                   Cluster {{ s.cluster }}
                 </span>
               </td>
+              <td class="text-right tabular-nums">{{ s.recency_days != null ? (s.recency_days | number:'1.0-0') : '—' }}</td>
+              <td class="text-right tabular-nums">{{ s.frequency != null ? (s.frequency | number:'1.0-0') : '—' }}</td>
+              <td class="text-right tabular-nums">{{ s.monetary != null ? (s.monetary | number:'1.0-0') : '—' }}</td>
               <td class="text-right font-mono text-xs tabular-nums">{{ s.distance | number:'1.3-3' }}</td>
             </tr>
           </tbody>

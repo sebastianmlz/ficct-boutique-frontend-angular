@@ -14,7 +14,15 @@ import {
 
 interface ForecastPoint { period_index: number; value: number; }
 interface ForecastResult { scope: string; horizon: number; computed_at: string; points: ForecastPoint[]; }
-interface Segment { customer_id: string; cluster: number; distance: number; run_id?: string; }
+interface Segment {
+  customer_id: string;
+  cluster: number;
+  distance: number;
+  recency_days?: number;
+  frequency?: number;
+  monetary?: number;
+  run_id?: string;
+}
 
 @Component({
   selector: 'app-ai-analytics',
@@ -75,11 +83,35 @@ export class AiAnalyticsComponent {
         this.http.post<{ segments: Segment[] }>(`${this.base}/clustering/run/`, { customers, k: this.k }),
       );
       this.segments.set(r.segments);
+      // CU09: after the run, read back the persisted segments (GET /clustering/segments/).
+      try {
+        await this.fetchSegments();
+      } catch {
+        /* keep the run response if the read-back fails */
+      }
     } catch (e) {
       this.clusterError.set((e as { message?: string }).message ?? 'Error');
     } finally {
       this.clusterBusy.set(false);
     }
+  }
+
+  /** Load the persisted segments (GET /clustering/segments/) without re-running KMeans. */
+  async loadSegments(): Promise<void> {
+    this.clusterBusy.set(true);
+    this.clusterError.set(null);
+    try {
+      await this.fetchSegments();
+    } catch (e) {
+      this.clusterError.set((e as { message?: string }).message ?? 'Error');
+    } finally {
+      this.clusterBusy.set(false);
+    }
+  }
+
+  private async fetchSegments(): Promise<void> {
+    const r = await firstValueFrom(this.http.get<{ segments: Segment[] }>(`${this.base}/clustering/segments/`));
+    this.segments.set(r.segments ?? []);
   }
 
   clusterColor(c: number): string {
