@@ -14,7 +14,8 @@ Defined in [src/app/app.routes.ts](../../src/app/app.routes.ts).
 | `/products/new`, `/products/:id/edit` | `ProductFormComponent` | admin only | Go `createProduct` or `updateProduct` (+ `replaceProductImage` after a successful upload); Express upload flow for the image |
 | `/inventory` | `InventoryComponent` | any auth | Go `inventoryEntries`, `branches`; `setInventoryStock` / `adjustInventoryStock` / `updateInventoryReorderLevel` for admin/staff |
 | `/branches` | `BranchesComponent` | any auth | Go `branches`, `createBranch` (admin) |
-| `/sales` | `SalesComponent` | any auth | Go `sales`, `monthlySales`, `popularProducts` |
+| `/sales` | `SalesComponent` | any auth | Go `sales`, `monthlySales`, `popularProducts` (reports panel) |
+| `/orders` | `OrdersComponent` | admin or staff | Go `sales`, `orders`, `sale`, `order` (read) + `confirmSale` (Sale pending → confirmed, creates the Order); via `OrdersService` |
 | `/documents` | `DocumentsComponent` | any auth | Express full set (upload-request, PUT, confirm, list, download-url, verify, delete, restore, ledger) |
 | `/audit` | `AuditComponent` | admin only | Express `GET /api/v1/audit` |
 | `/ai-analytics` | `AiAnalyticsComponent` | admin or staff | Django: `POST /forecasting/run`, `GET /forecasting/latest/{scope}`, `POST /clustering/run`, `GET /clustering/segments` |
