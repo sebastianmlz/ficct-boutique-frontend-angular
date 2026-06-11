@@ -60,6 +60,11 @@ const ACTIVATE_VARIANT = gql`
   mutation ActivateVariant($id: UUID!) { activateVariant(id: $id) { id isActive } }
 `;
 
+/**
+ * Inventory management screen. Lists paginated, filterable stock entries per
+ * branch/variant and lets staff set or adjust stock, change reorder levels and
+ * activate/deactivate variants via GraphQL mutations.
+ */
 @Component({
   selector: 'app-inventory',
   standalone: true,

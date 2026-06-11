@@ -24,6 +24,11 @@ interface Segment {
   run_id?: string;
 }
 
+/**
+ * AI analytics console. Calls the AI microservice to run sales forecasting and
+ * customer (RFM) KMeans clustering, then renders the results as charts; can
+ * also load previously persisted segments without re-running the model.
+ */
 @Component({
   selector: 'app-ai-analytics',
   standalone: true,

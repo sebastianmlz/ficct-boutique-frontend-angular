@@ -24,6 +24,11 @@ const ACCEPT_BY_CATEGORY: Record<DocumentRecord['category'], string> = {
   other: '*/*',
 };
 
+/**
+ * Documents management screen. Handles secure upload (request URL, upload,
+ * SHA-256, confirm), download, integrity verification and the per-document
+ * hash-chain ledger viewer, plus soft delete.
+ */
 @Component({
   selector: 'app-documents',
   standalone: true,

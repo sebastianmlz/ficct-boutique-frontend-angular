@@ -20,6 +20,10 @@ const QUERY = gql`
   }
 `;
 
+/**
+ * Sales analytics panel. Fetches 12-month sales totals and the top-selling
+ * products, then exposes chart data and aggregate totals for the template.
+ */
 @Component({
   selector: 'app-sales',
   standalone: true,

@@ -23,6 +23,11 @@ const LOGIN_MUTATION = gql`
   }
 `;
 
+/**
+ * Login screen. Validates the credentials form, runs the login GraphQL
+ * mutation, stores the returned session via AuthService and redirects to the
+ * dashboard on success.
+ */
 @Component({
   selector: 'app-login',
   standalone: true,

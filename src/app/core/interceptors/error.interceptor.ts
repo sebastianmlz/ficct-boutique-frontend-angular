@@ -4,6 +4,11 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 
+/**
+ * HTTP interceptor for global error handling: on a 401 response it clears the
+ * session and redirects to /login, then re-throws the error so callers can
+ * still react to it.
+ */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);

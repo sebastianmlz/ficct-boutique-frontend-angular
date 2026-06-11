@@ -71,6 +71,11 @@ interface ProductForEdit {
   isActive: boolean;
 }
 
+/**
+ * Product create/edit form. Detects edit mode from the route id, manages the
+ * optional image upload (request URL, upload, SHA-256, confirm) and persists
+ * the product via create/update/replace-image GraphQL mutations.
+ */
 @Component({
   selector: 'app-product-form',
   standalone: true,

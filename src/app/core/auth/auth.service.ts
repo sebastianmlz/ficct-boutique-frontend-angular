@@ -13,6 +13,11 @@ const TOKEN_KEY = 'ficct.admin.token';
 const USER_KEY = 'ficct.admin.user';
 const EXP_KEY = 'ficct.admin.exp';
 
+/**
+ * Root authentication store. Persists the JWT, expiry and user in localStorage,
+ * exposes reactive `user`/`isAuthenticated` signals and role checks, and manages
+ * session set/clear used by the login flow, guards and interceptors.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly _token = signal<string | null>(localStorage.getItem(TOKEN_KEY));

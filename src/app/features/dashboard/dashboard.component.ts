@@ -36,6 +36,10 @@ const DASHBOARD_QUERY = gql`
   }
 `;
 
+/**
+ * Admin home dashboard. Loads the summary KPIs, monthly sales and most popular
+ * products in a single GraphQL query and renders them as cards and charts.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,

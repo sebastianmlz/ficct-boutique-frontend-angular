@@ -25,6 +25,11 @@ const ACTION_CLASS: Record<ActionKey, string> = {
   verify: 'badge bg-teal-50 text-teal-700',
 };
 
+/**
+ * Document audit log viewer. Loads audit entries (optionally filtered by
+ * document/action) alongside document titles, and supports expanding an entry
+ * to inspect its metadata.
+ */
 @Component({
   selector: 'app-audit',
   standalone: true,

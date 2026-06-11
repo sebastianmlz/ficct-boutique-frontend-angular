@@ -22,6 +22,10 @@ const CREATE_BRANCH = gql`
   }
 `;
 
+/**
+ * Branches screen. Lists the store branches and provides a reactive form to
+ * create a new branch via GraphQL; exposes AuthService for role-based UI.
+ */
 @Component({
   selector: 'app-branches',
   standalone: true,

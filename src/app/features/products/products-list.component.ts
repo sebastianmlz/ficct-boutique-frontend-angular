@@ -44,6 +44,10 @@ const ACTIVATE = gql`
   }
 `;
 
+/**
+ * Product catalogue list. Loads filterable products (by category/search and
+ * optionally inactive ones) and lets staff activate or deactivate a product.
+ */
 @Component({
   selector: 'app-products-list',
   standalone: true,
